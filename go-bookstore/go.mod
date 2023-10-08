@@ -1,4 +1,4 @@
-module github.com/KemalBekir/Go-Tutorials
+module github.com/KemalBekir/Go-Tutorials/go-bookstore
 
 go 1.21.1
 
