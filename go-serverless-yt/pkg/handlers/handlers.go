@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/KemalBekir/Go-Tutorials/go-serverless-yt/pkg/user"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 )
 
@@ -60,12 +58,12 @@ func UpdateUser(req events.APIGatewayProxyRequest, tableName string, dynaClient 
 	return apiResponse(http.StatusOK, result)
 }
 
-func DeleteUser(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI)(
+func DeleteUser(req events.APIGatewayProxyRequest, tableName string, dynaClient dynamodbiface.DynamoDBAPI) (
 	*events.APIGatewayProxyResponse, error,
-){
-	err := 	
+) {
+	err := user.DeleteUser(req, tableName, dynaClient)
 
-	if err!= nil {
+	if err != nil {
 		return apiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),
 		})
