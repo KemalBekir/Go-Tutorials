@@ -11,6 +11,7 @@ type Storage interface {
 	CreateAccount(*Account) error
 	DeleteAccount(int) error
 	UpdateAccount(*Account) error
+	GetAccounts() ([]*Account, error)
 	GetAccountByID(int) (*Account, error)
 }
 
@@ -40,11 +41,11 @@ func (s *PostgressStore) Init() error {
 func (s *PostgressStore) createAccountTable() error {
 	query := `create table if not exists account (
 		id serial primary key,
-		first_name varchar(50),
-		last_name varchar(50),
+		first_name varchar(100),
+		last_name varchar(100),
 		number serial,
 		balance serial,
-		created_at timestamp,
+		created_at timestamp
 	)`
 
 	_, err := s.db.Exec(query)
@@ -70,8 +71,48 @@ func (s *PostgressStore) UpdateAccount(*Account) error {
 	return nil
 }
 func (s *PostgressStore) DeleteAccount(id int) error {
-	return nil
+	_, err := s.db.Query("delete from account where id = $1", id)
+	return err
 }
 func (s *PostgressStore) GetAccountByID(id int) (*Account, error) {
-	return nil, nil
+	rows, err := s.db.Query("select * from account where id = $1", id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		return scanIntoAccount(rows)
+	}
+	return nil, fmt.Errorf("account %d not found", id)
+}
+
+func (s *PostgressStore) GetAccounts() ([]*Account, error) {
+
+	rows, err := s.db.Query("select * from account")
+	if err != nil {
+		return nil, err
+	}
+
+	accounts := []*Account{}
+	for rows.Next() {
+		account, err := scanIntoAccount(rows)
+		if err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, account)
+	}
+
+	return accounts, nil
+}
+
+func scanIntoAccount(rows *sql.Rows) (*Account, error) {
+	account := new(Account)
+	err := rows.Scan(
+		&account.ID,
+		&account.FirstName,
+		&account.LastName,
+		&account.Number,
+		&account.Balance,
+		&account.CreatedAt)
+
+	return account, err
 }
