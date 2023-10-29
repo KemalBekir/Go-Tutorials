@@ -1,2 +1,3 @@
 ai-bot-wolfram/.env
 gobank/Makefile
+go-mongodb/app.env
