@@ -1,0 +1,10 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": 27017,
+    "name": "project name"
+  },
+  "jwt": {
+    "signing_key": "secret_key"
+  }
+}
