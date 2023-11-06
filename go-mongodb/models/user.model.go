@@ -18,7 +18,7 @@ type SignUpInput struct {
 }
 
 type SignInInput struct {
-	Email    string `json:"email bson:"email" binding:"requered'"`
+	Email    string `json:"email bson:"email" binding:"required'"`
 	Password string `json:"password bson:"password" binding:"requered'"`
 }
 
