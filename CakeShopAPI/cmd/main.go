@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/controllers"
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/utils"
 	"github.com/gorilla/mux"
 )
@@ -19,6 +20,11 @@ func main() {
 	defer client.Disconnect(context.Background())
 
 	r := mux.NewRouter()
+
+	userController := &controllers.UserController{}
+	catalogController := &controllers.CatalogController{}
+	userController.RegisterRoutes(r)
+	catalogController.CatalogRoutes(r)
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
