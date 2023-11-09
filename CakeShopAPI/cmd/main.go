@@ -23,8 +23,12 @@ func main() {
 
 	userController := &controllers.UserController{}
 	catalogController := &controllers.CatalogController{}
+	chatController := &controllers.ChatController{}
+	messageController := &controllers.MessageController{}
 	userController.RegisterRoutes(r)
 	catalogController.CatalogRoutes(r)
+	chatController.ChatRoutes(r)
+	messageController.MessageRoutes(r)
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
