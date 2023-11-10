@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -26,4 +27,13 @@ type Cake struct {
 	Discount    float64              `json:"discount" bson:"discount"`
 	CreatedAt   time.Time            `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time            `json:"updated_at" bson:"updated_at"`
+}
+
+func (cake *Cake) MarshalJSON() ([]byte, error) {
+	type Alias Cake
+	return json.Marshal(&struct {
+		*Alias
+	}{
+		Alias: (*Alias)(cake),
+	})
 }
