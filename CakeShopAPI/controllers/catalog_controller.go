@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/services"
 	"github.com/gorilla/mux"
 )
 
-type CatalogController struct{}
+type CatalogController struct {
+	CakeCollection *services.CakeCollection
+}
 
 func (c *CatalogController) CatalogRoutes(router *mux.Router) {
 	router.HandleFunc("/catalog/", c.GetAll).Methods("GET")
@@ -43,7 +46,12 @@ func (c *CatalogController) GetAllByOwner(w http.ResponseWriter, r *http.Request
 }
 func (c *CatalogController) Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog Create route"})
+
+	// Call the Create function from CakeCollection
+	services.Create(r.Context(), w, r, c.CakeCollection)
+
+	// Respond with a success message
+	json.NewEncoder(w).Encode(map[string]string{"status": "Cake created successfully"})
 }
 func (c *CatalogController) GetDetails(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
