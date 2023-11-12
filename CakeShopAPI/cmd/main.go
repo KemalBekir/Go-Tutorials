@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -15,31 +16,31 @@ import (
 
 func main() {
 	// Replace "<connection string>" with your actual Atlas connection string
-	const uri = "mongodb://localhost:27017"
+	const uri = "mongodb://localhost:27017/"
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
 
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
 	client, err := mongo.Connect(context.TODO(), opts)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
+		if err := client.Disconnect(context.Background()); err != nil {
 			log.Fatal(err)
 		}
+		fmt.Println("Connection to MongoDB closed.")
 	}()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		log.Fatal("Could not connect to the database:", err)
 	}
 
-	db := client.Database("cakeShop") // Replace "test" with your actual database name
-	cakeCollection := services.NewCakeCollection(db)
+	collection := client.Database("cakeShop").Collection("cakes") // Replace "test" with your actual database name
+	cakeCollection := services.NewCakeCollection(collection)
 
 	r := mux.NewRouter()
 
@@ -56,5 +57,7 @@ func main() {
 	server := &http.Server{Addr: ":8080", Handler: r}
 
 	log.Println("REST API running on port: ", server.Addr)
-	http.ListenAndServe(server.Addr, r)
+	if err := http.ListenAndServe(server.Addr, r); err != nil {
+		log.Fatal(err)
+	}
 }

@@ -48,7 +48,7 @@ func (c *CatalogController) Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Call the Create function from CakeCollection
-	services.Create(r.Context(), w, r, c.CakeCollection)
+	services.Create(w, r, c.CakeCollection)
 
 	// Respond with a success message
 	json.NewEncoder(w).Encode(map[string]string{"status": "Cake created successfully"})

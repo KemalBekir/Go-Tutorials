@@ -29,6 +29,20 @@ type Cake struct {
 	UpdatedAt   time.Time            `json:"updated_at" bson:"updated_at"`
 }
 
+type CakeDTO struct {
+	CakeName    string               `json:"cakeName" bson:"cakeName"`
+	Description string               `json:"description" bson:"description"`
+	Price       float64              `json:"price" bson:"price"`
+	Type        string               `json:"type" bson:"type"`
+	Images      []Image              `json:"images" bson:"images"`
+	Likes       []primitive.ObjectID `json:"likes" bson:"likes"`
+	Owner       primitive.ObjectID   `json:"owner" bson:"owner"`
+	OnOffer     bool                 `json:"onOffer" bson:"onOffer"`
+	Discount    float64              `json:"discount" bson:"discount"`
+	CreatedAt   time.Time            `json:"created_at" bson:"created_at"`
+	UpdatedAt   time.Time            `json:"updated_at" bson:"updated_at"`
+}
+
 func (cake *Cake) MarshalJSON() ([]byte, error) {
 	type Alias Cake
 	return json.Marshal(&struct {

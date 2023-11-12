@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/models"
@@ -17,9 +18,9 @@ type CakeCollection struct {
 	Collection *mongo.Collection
 }
 
-func NewCakeCollection(db *mongo.Database) *CakeCollection {
+func NewCakeCollection(collection *mongo.Collection) *CakeCollection {
 	return &CakeCollection{
-		Collection: db.Collection("cakes"), // replace "cakes" with your actual collection name
+		Collection: collection, // replace "cakes" with your actual collection name
 	}
 }
 
@@ -105,7 +106,9 @@ func GetAllCakesByOwner(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(cakeList)
 }
 
-func Create(ctx context.Context, w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection) {
+func Create(w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection) {
+	w.Header().Set("Content-Type", "application/json")
+
 	var newCake models.Cake
 	err := json.NewDecoder(r.Body).Decode(&newCake)
 	if err != nil {
@@ -120,8 +123,9 @@ func Create(ctx context.Context, w http.ResponseWriter, r *http.Request, cakeCol
 	// Set default values or perform any additional validation if needed
 
 	// Insert the new cake into the collection
-	_, err = cakeCollection.Collection.InsertOne(ctx, newCake)
+	_, err = cakeCollection.Collection.InsertOne(context.TODO(), newCake)
 	if err != nil {
+		log.Printf("Error creating new cake: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error creating new cake: %v", err)
 		return
