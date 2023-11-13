@@ -106,7 +106,7 @@ func GetAllCakesByOwner(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(cakeList)
 }
 
-func Create(w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection) {
+func Create(w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection, client *mongo.Client) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var newCake models.Cake
@@ -123,7 +123,7 @@ func Create(w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollecti
 	// Set default values or perform any additional validation if needed
 
 	// Insert the new cake into the collection
-	_, err = cakeCollection.Collection.InsertOne(context.TODO(), newCake)
+	_, err = client.Database("cakeShop").Collection("cakes").InsertOne(context.TODO(), newCake)
 	if err != nil {
 		log.Printf("Error creating new cake: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)

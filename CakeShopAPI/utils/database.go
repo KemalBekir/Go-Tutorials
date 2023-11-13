@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,6 +15,8 @@ func ConnectToMongoDB() (*mongo.Client, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println("Connected to MongoDB")
 
 	return client, nil
 }

@@ -10,13 +10,14 @@ import (
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/controllers"
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/services"
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
 	// Replace "<connection string>" with your actual Atlas connection string
-	const uri = "mongodb://localhost:27017/"
+	const uri = "mongodb://localhost:27017"
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(uri).SetServerAPIOptions(serverAPI)
@@ -42,10 +43,19 @@ func main() {
 	collection := client.Database("cakeShop").Collection("cakes") // Replace "test" with your actual database name
 	cakeCollection := services.NewCakeCollection(collection)
 
+	var result bson.M
+	if err := client.Database("cakeShop").RunCommand(context.TODO(), bson.D{{"ping", 1}}).Decode(&result); err != nil {
+		panic(err)
+	}
+	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
+
 	r := mux.NewRouter()
 
 	userController := &controllers.UserController{}
-	catalogController := &controllers.CatalogController{CakeCollection: cakeCollection}
+	catalogController := &controllers.CatalogController{
+		CakeCollection: cakeCollection,
+		Client:         client,
+	}
 	chatController := &controllers.ChatController{}
 	messageController := &controllers.MessageController{}
 
@@ -53,6 +63,13 @@ func main() {
 	catalogController.CatalogRoutes(r)
 	chatController.ChatRoutes(r)
 	messageController.MessageRoutes(r)
+
+	cNames, err := client.Database("cakeShop").ListCollectionNames(ctx, bson.D{})
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	fmt.Println(cNames)
 
 	server := &http.Server{Addr: ":8080", Handler: r}
 
