@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -28,10 +29,18 @@ func (c *CatalogController) CatalogRoutes(router *mux.Router) {
 
 func (c *CatalogController) GetAll(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	cakeCollection := c.CakeCollection
+
+	services.GetAll(context.TODO(), w, r, cakeCollection)
 	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog GetAll route"})
 }
 func (c *CatalogController) GetTopFive(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	cakeCollection := c.CakeCollection
+
+	services.GetTopFive(context.TODO(), w, r, cakeCollection)
 	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog Top5 route"})
 }
 func (c *CatalogController) GetOnOffer(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +59,7 @@ func (c *CatalogController) Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Call the Create function from CakeCollection
-	services.Create(w, r, c.CakeCollection, &mongo.Client{})
+	services.Create(w, r, c.CakeCollection)
 
 	// Respond with a success message
 	json.NewEncoder(w).Encode(map[string]string{"status": "Cake created successfully"})

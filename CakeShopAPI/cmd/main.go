@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 func main() {
@@ -35,7 +36,7 @@ func main() {
 		fmt.Println("Connection to MongoDB closed.")
 	}()
 
-	err = client.Ping(ctx, nil)
+	err = client.Ping(context.TODO(), readpref.Primary())
 	if err != nil {
 		log.Fatal("Could not connect to the database:", err)
 	}

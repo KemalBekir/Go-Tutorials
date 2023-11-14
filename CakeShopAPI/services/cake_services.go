@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type CakeCollection struct {
@@ -46,7 +47,8 @@ func GetAll(ctx context.Context, w http.ResponseWriter, r *http.Request, cakeCol
 
 // Get top 5 cakes
 func GetTopFive(ctx context.Context, w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection) {
-	cakesCursor, err := cakeCollection.Collection.Find(ctx, bson.M{})
+	// Limit the number of cakes to 5
+	cakesCursor, err := cakeCollection.Collection.Find(ctx, bson.M{}, options.Find().SetLimit(5))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error getting top 5 cakes: %v", err)
@@ -106,9 +108,8 @@ func GetAllCakesByOwner(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(cakeList)
 }
 
-func Create(w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection, client *mongo.Client) {
-	w.Header().Set("Content-Type", "application/json")
-
+func Create(w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection) {
+	// Decode the request body into a models.Cake object
 	var newCake models.Cake
 	err := json.NewDecoder(r.Body).Decode(&newCake)
 	if err != nil {
@@ -123,7 +124,7 @@ func Create(w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollecti
 	// Set default values or perform any additional validation if needed
 
 	// Insert the new cake into the collection
-	_, err = client.Database("cakeShop").Collection("cakes").InsertOne(context.TODO(), newCake)
+	result, err := cakeCollection.Collection.InsertOne(context.TODO(), newCake)
 	if err != nil {
 		log.Printf("Error creating new cake: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -131,6 +132,9 @@ func Create(w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollecti
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprint(w, "Cake created successfully")
+	// Log the inserted document ID
+	log.Printf("Inserted document ID: %v", result.InsertedID)
+
+	// Encode the new cake to JSON and write it to the response
+	json.NewEncoder(w).Encode(newCake)
 }
