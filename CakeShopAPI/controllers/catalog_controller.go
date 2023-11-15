@@ -7,12 +7,17 @@ import (
 
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/services"
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type CatalogController struct {
 	CakeCollection *services.CakeCollection
 	Client         *mongo.Client
+}
+
+type Owner struct {
+	ID primitive.ObjectID `json:"_id" bson:"_id"`
 }
 
 func (c *CatalogController) CatalogRoutes(router *mux.Router) {
@@ -45,14 +50,25 @@ func (c *CatalogController) GetTopFive(w http.ResponseWriter, r *http.Request) {
 }
 func (c *CatalogController) GetOnOffer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	cakeCollection := c.CakeCollection
+
+	services.GetCakesOnOffer(context.TODO(), w, r, cakeCollection)
 	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog OnOffer route"})
 }
 func (c *CatalogController) Search(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog Search route"})
 }
+
+// TODO - fix Get all by owner
 func (c *CatalogController) GetAllByOwner(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	cakeCollection := c.CakeCollection
+	ownerId := mux.Vars(r)["owner"]
+
+	services.GetAllCakesByOwner(context.TODO(), w, r, cakeCollection, ownerId)
 	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog All By Owner route"})
 }
 func (c *CatalogController) Create(w http.ResponseWriter, r *http.Request) {
@@ -64,6 +80,7 @@ func (c *CatalogController) Create(w http.ResponseWriter, r *http.Request) {
 	// Respond with a success message
 	json.NewEncoder(w).Encode(map[string]string{"status": "Cake created successfully"})
 }
+
 func (c *CatalogController) GetDetails(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog Details route"})

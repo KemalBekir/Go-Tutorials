@@ -87,7 +87,7 @@ func GetCakesOnOffer(ctx context.Context, w http.ResponseWriter, r *http.Request
 }
 
 // Get all cakes by owner
-func GetAllCakesByOwner(ctx context.Context, w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection) {
+func GetAllCakesByOwner(ctx context.Context, w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection, ownerId string) {
 	ownerID := mux.Vars(r)["ownerID"]
 
 	cakesCursor, err := cakeCollection.Collection.Find(ctx, bson.M{"owner": ownerID})
