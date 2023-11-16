@@ -3,10 +3,13 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
+	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/models"
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/services"
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -25,7 +28,7 @@ func (c *CatalogController) CatalogRoutes(router *mux.Router) {
 	router.HandleFunc("/catalog/top5", c.GetTopFive).Methods("GET")
 	router.HandleFunc("/catalog/deals", c.GetOnOffer).Methods("GET")
 	router.HandleFunc("/catalog/search", c.Search).Methods("GET")
-	router.HandleFunc("/catalog/myCakes", c.GetAllByOwner).Methods("GET")
+	router.HandleFunc("/catalog/myCakes/{ownerID}", c.GetAllByOwner).Methods("GET")
 	router.HandleFunc("/catalog/create", c.Create).Methods("POST")
 	router.HandleFunc("/catalog/{id}", c.GetDetails).Methods("GET")
 	router.HandleFunc("/cataog/{id}/update", c.Update).Methods("PUT")
@@ -66,11 +69,25 @@ func (c *CatalogController) GetAllByOwner(w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 
 	cakeCollection := c.CakeCollection
-	ownerId := mux.Vars(r)["owner"]
+	ownerID := mux.Vars(r)["ownerID"]
 
-	services.GetAllCakesByOwner(context.TODO(), w, r, cakeCollection, ownerId)
-	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog All By Owner route"})
+	cakeList, err := services.GetAllCakesByOwner(context.TODO(), cakeCollection, ownerID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error getting cakes by owner: %v", err)
+		return
+	}
+
+	if cakeList == nil {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprint(w, "No cakes found for this owner")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(cakeList)
 }
+
 func (c *CatalogController) Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -83,8 +100,40 @@ func (c *CatalogController) Create(w http.ResponseWriter, r *http.Request) {
 
 func (c *CatalogController) GetDetails(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog Details route"})
+
+	cakeCollection := c.CakeCollection
+
+	cakeID := mux.Vars(r)["id"]
+
+	objectID, err := primitive.ObjectIDFromHex(cakeID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error converting cakeID to ObjectID: %v", err)
+		return
+	}
+
+	cakeCursor := cakeCollection.Collection.FindOne(context.TODO(), bson.M{"_id": objectID})
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		w.WriteHeader((http.StatusInternalServerError))
+		fmt.Fprintf(w, "Error getting cake details: %v", err)
+		return
+	}
+
+	var cake models.Cake
+	if err := cakeCursor.Decode(&cake); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error decoding cake document: %v", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(cake)
 }
+
 func (c *CatalogController) Update(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog Update route"})

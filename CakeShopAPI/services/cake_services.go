@@ -87,25 +87,28 @@ func GetCakesOnOffer(ctx context.Context, w http.ResponseWriter, r *http.Request
 }
 
 // Get all cakes by owner
-func GetAllCakesByOwner(ctx context.Context, w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection, ownerId string) {
-	ownerID := mux.Vars(r)["ownerID"]
-
+func GetAllCakesByOwner(ctx context.Context, cakeCollection *CakeCollection, ownerID string) ([]models.Cake, error) {
+	log.Printf("OwnerID is: %s", ownerID)
 	cakesCursor, err := cakeCollection.Collection.Find(ctx, bson.M{"owner": ownerID})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error getting cakes by owner: %v", err)
-		return
+		log.Printf("Error finding cakes for owner %s: %s", ownerID, err.Error())
+		return nil, err
 	}
 
-	var cakeList []models.Cake // Replace YourCakeStruct with your actual struct type
+	defer func() {
+		if err := cakesCursor.Close(ctx); err != nil {
+			log.Printf("Error closing cursor: %s", err.Error())
+		}
+	}()
+
+	var cakeList []models.Cake
 	if err := cakesCursor.All(ctx, &cakeList); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, "Error decoding cakes: %v", err)
-		return
+		log.Printf("Error decoding cakes for owner %s: %s", ownerID, err.Error())
+		return nil, err
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(cakeList)
+	log.Printf("Retrieved %d cakes for owner %s", len(cakeList), ownerID)
+	return cakeList, nil
 }
 
 func Create(w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection) {
@@ -137,4 +140,38 @@ func Create(w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollecti
 
 	// Encode the new cake to JSON and write it to the response
 	json.NewEncoder(w).Encode(newCake)
+}
+
+func GetDetails(ctx context.Context, w http.ResponseWriter, r *http.Request, cakeCollection *CakeCollection) {
+	cakeId := mux.Vars(r)["cakeID"]
+
+	objectID, err := primitive.ObjectIDFromHex(cakeId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error converting cakeID to ObjectID: %v", err)
+		return
+	}
+
+	cakeCursor := cakeCollection.Collection.FindOne(ctx, bson.M{"_id": objectID})
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "Cake with ID '%s' not found", cakeId)
+			return
+		}
+
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error getting cake details: %v", err)
+		return
+	}
+
+	var cake models.Cake
+	if err := cakeCursor.Decode(&cake); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error decoding cake document: %v", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(cake)
 }
