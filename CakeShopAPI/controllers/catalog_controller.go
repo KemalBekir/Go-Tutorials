@@ -28,11 +28,12 @@ func (c *CatalogController) CatalogRoutes(router *mux.Router) {
 	router.HandleFunc("/catalog/top5", c.GetTopFive).Methods("GET")
 	router.HandleFunc("/catalog/deals", c.GetOnOffer).Methods("GET")
 	router.HandleFunc("/catalog/search", c.Search).Methods("GET")
+	//TODO Modify myCakes
 	router.HandleFunc("/catalog/myCakes/{ownerID}", c.GetAllByOwner).Methods("GET")
 	router.HandleFunc("/catalog/create", c.Create).Methods("POST")
 	router.HandleFunc("/catalog/{id}", c.GetDetails).Methods("GET")
-	router.HandleFunc("/cataog/{id}/update", c.Update).Methods("PUT")
-	router.HandleFunc("/cataog/{id}/delete", c.Delete).Methods("DELETE")
+	router.HandleFunc("/catalog/{id}/update", c.Update).Methods("PUT")
+	router.HandleFunc("/catalog/{id}/delete", c.Delete).Methods("DELETE")
 }
 
 func (c *CatalogController) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -136,8 +137,32 @@ func (c *CatalogController) GetDetails(w http.ResponseWriter, r *http.Request) {
 
 func (c *CatalogController) Update(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog Update route"})
+
+	// Parse the cake ID from the URL using Gorilla Mux
+	params := mux.Vars(r)
+	cakeID := params["id"]
+
+	fmt.Printf("CakeID %s", cakeID)
+
+	// Decode the updated cake details from the request body
+	var updatedCake models.Cake
+	err := json.NewDecoder(r.Body).Decode(&updatedCake)
+	if err != nil {
+		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
+		return
+	}
+
+	// Call the service function to update the cake
+	err = services.UpdateCake(r.Context(), c.CakeCollection, cakeID, updatedCake)
+	if err != nil {
+		http.Error(w, "Failed to update the cake", http.StatusInternalServerError)
+		return
+	}
+
+	// Send a success response if the update was successful
+	json.NewEncoder(w).Encode(map[string]string{"status": "Cake updated successfully"})
 }
+
 func (c *CatalogController) Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog Delete route"})

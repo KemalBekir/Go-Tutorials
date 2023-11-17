@@ -22,7 +22,7 @@ type Cake struct {
 	Type        string               `json:"type" bson:"type"`
 	Images      []Image              `json:"images" bson:"images"`
 	Likes       []primitive.ObjectID `json:"likes" bson:"likes"`
-	Owner       primitive.ObjectID   `json:"owner" bson:"owner"`
+	Owner       string               `json:"owner" bson:"owner"`
 	OnOffer     bool                 `json:"onOffer" bson:"onOffer"`
 	Discount    float64              `json:"discount" bson:"discount"`
 	CreatedAt   time.Time            `json:"created_at" bson:"created_at"`

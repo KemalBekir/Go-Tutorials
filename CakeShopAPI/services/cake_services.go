@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/models"
 	"github.com/gorilla/mux"
@@ -87,9 +88,15 @@ func GetCakesOnOffer(ctx context.Context, w http.ResponseWriter, r *http.Request
 }
 
 // Get all cakes by owner
+// TODO adjust to be for authenticated users only
 func GetAllCakesByOwner(ctx context.Context, cakeCollection *CakeCollection, ownerID string) ([]models.Cake, error) {
-	log.Printf("OwnerID is: %s", ownerID)
-	cakesCursor, err := cakeCollection.Collection.Find(ctx, bson.M{"owner": ownerID})
+	ownerObjectID, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		log.Printf("Error converting ownerID to ObjectID: %s", err.Error())
+		return nil, err
+	}
+
+	cakesCursor, err := cakeCollection.Collection.Find(ctx, bson.M{"owner": ownerObjectID})
 	if err != nil {
 		log.Printf("Error finding cakes for owner %s: %s", ownerID, err.Error())
 		return nil, err
@@ -102,8 +109,18 @@ func GetAllCakesByOwner(ctx context.Context, cakeCollection *CakeCollection, own
 	}()
 
 	var cakeList []models.Cake
-	if err := cakesCursor.All(ctx, &cakeList); err != nil {
-		log.Printf("Error decoding cakes for owner %s: %s", ownerID, err.Error())
+	for cakesCursor.Next(ctx) {
+		var cake models.Cake
+		if err := cakesCursor.Decode(&cake); err != nil {
+			log.Printf("Error decoding cake for owner %s: %s", ownerID, err.Error())
+			return nil, err
+		}
+		log.Printf("Retrieved cake: %+v", cake) // Logging each cake
+		cakeList = append(cakeList, cake)
+	}
+
+	if err := cakesCursor.Err(); err != nil {
+		log.Printf("Error iterating cursor: %s", err.Error())
 		return nil, err
 	}
 
@@ -174,4 +191,34 @@ func GetDetails(ctx context.Context, w http.ResponseWriter, r *http.Request, cak
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(cake)
+}
+
+func UpdateCake(ctx context.Context, cakeCollection *CakeCollection, cakeID string, updatedCake models.Cake) error {
+	objectID, err := primitive.ObjectIDFromHex(cakeID)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("CakeID is %s: ", objectID)
+
+	filter := bson.M{"_id": objectID}
+	update := bson.M{"$set": bson.M{
+		"cakeName":    updatedCake.CakeName,
+		"description": updatedCake.Description,
+		"price":       updatedCake.Price,
+		"type":        updatedCake.Type,
+		"images":      updatedCake.Images,
+		"likes":       updatedCake.Likes,
+		"onOffer":     updatedCake.OnOffer,
+		"discount":    updatedCake.Discount,
+		"created_at":  updatedCake.CreatedAt,
+		"updated_at":  time.Now(), // Update the timestamp
+	}}
+
+	_, err = cakeCollection.Collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
