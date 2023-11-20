@@ -165,5 +165,20 @@ func (c *CatalogController) Update(w http.ResponseWriter, r *http.Request) {
 
 func (c *CatalogController) Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog Delete route"})
+
+	// Get the cake ID from the request URL
+	params := mux.Vars(r)
+	cakeID := params["id"]
+
+	// Perform the deletion
+	err := services.DeleteCake(r.Context(), c.CakeCollection, cakeID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	// If successful, respond with success status
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Cake deleted successfully"})
 }

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -220,5 +221,22 @@ func UpdateCake(ctx context.Context, cakeCollection *CakeCollection, cakeID stri
 		return err
 	}
 
+	return nil
+}
+
+func DeleteCake(ctx context.Context, cakeCollection *CakeCollection, cakeID string) error {
+	objectId, err := primitive.ObjectIDFromHex(cakeID)
+	if err != nil {
+		return err
+	}
+
+	res, err := cakeCollection.Collection.DeleteOne(ctx, bson.M{"_id": objectId})
+	if err != nil {
+		return err
+	}
+
+	if res.DeletedCount == 0 {
+		return errors.New("no matching cake found to delete")
+	}
 	return nil
 }
