@@ -41,7 +41,9 @@ func main() {
 		log.Fatal("Could not connect to the database:", err)
 	}
 
-	collection := client.Database("cakeShop").Collection("cakes") // Replace "test" with your actual database name
+	collection := client.Database("cakeShop").Collection("cakes")
+	authCollection := client.Database("cakeShop").Collection("users")
+	userCollection := services.NewUserCollection(authCollection) // Replace "test" with your actual database name
 	cakeCollection := services.NewCakeCollection(collection)
 
 	var result bson.M
@@ -52,7 +54,9 @@ func main() {
 
 	r := mux.NewRouter()
 
-	userController := &controllers.UserController{}
+	userController := &controllers.UserController{
+		UserCollection: userCollection,
+	}
 	catalogController := &controllers.CatalogController{
 		CakeCollection: cakeCollection,
 		Client:         client,

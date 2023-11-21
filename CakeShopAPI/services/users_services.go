@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -12,7 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService struct {
+type UserCollection struct {
 	Collection *mongo.Collection
 }
 
@@ -26,15 +27,27 @@ type User struct {
 
 var blacklist []string
 
-func (s *UserService) Register(username, email, password string) (map[string]interface{}, error) {
+func NewUserCollection(collection *mongo.Collection) *UserCollection {
+	return &UserCollection{
+		Collection: collection,
+	}
+}
+
+func (s *UserCollection) Register(username, email, password string) (map[string]interface{}, error) {
 	existingUser := User{}
 	err := s.Collection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&existingUser)
 	if err == nil {
+		// Email already exists
 		return nil, errors.New("email already exists")
+	} else if err != nil && err != mongo.ErrNoDocuments {
+		// Handle other errors
+		log.Printf("Error finding existing user: %s", err)
+		return nil, err
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Printf("Error generating hashed password: %s", err)
 		return nil, err
 	}
 
@@ -46,11 +59,13 @@ func (s *UserService) Register(username, email, password string) (map[string]int
 
 	result, err := s.Collection.InsertOne(context.TODO(), newUser)
 	if err != nil {
+		log.Printf("Error inserting new user: %s", err)
 		return nil, err
 	}
 
 	userID, ok := result.InsertedID.(primitive.ObjectID)
 	if !ok {
+		log.Println("Failed to get user ID")
 		return nil, errors.New("failed to get user ID")
 	}
 
@@ -63,7 +78,7 @@ func (s *UserService) Register(username, email, password string) (map[string]int
 	return CreateSession(user), nil
 }
 
-func (s *UserService) Login(email, password string) (map[string]interface{}, error) {
+func (s *UserCollection) Login(email, password string) (map[string]interface{}, error) {
 	user := User{}
 	err := s.Collection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
 	if err != nil {
