@@ -13,4 +13,5 @@ type Chat struct {
 	LatestMessage primitive.ObjectID   `bson:"latestMessage,omitempty"`
 	GroupAdmin    primitive.ObjectID   `bson:"groupAdmin,omitempty"`
 	CreatedAt     time.Time            `bson:"createdAt,omitempty"`
+	UpdatedAt     time.Time            `bson:"updatedAt,omitempty"`
 }

@@ -42,8 +42,10 @@ func main() {
 	}
 
 	collection := client.Database("cakeShop").Collection("cakes")
-	authCollection := client.Database("cakeShop").Collection("users")
-	userCollection := services.NewUserCollection(authCollection) // Replace "test" with your actual database name
+	authDB := client.Database("cakeShop").Collection("users")
+	chatDB := client.Database("cakeShop").Collection("chats")
+	userCollection := services.NewUserCollection(authDB) // Replace "test" with your actual database name
+	chatCollection := services.NewChatCollection(chatDB)
 	cakeCollection := services.NewCakeCollection(collection)
 
 	var result bson.M
@@ -61,7 +63,9 @@ func main() {
 		CakeCollection: cakeCollection,
 		Client:         client,
 	}
-	chatController := &controllers.ChatController{}
+	chatController := &controllers.ChatController{
+		ChatCollection: chatCollection,
+	}
 	messageController := &controllers.MessageController{}
 
 	userController.RegisterRoutes(r)
