@@ -65,6 +65,7 @@ func main() {
 	}
 	chatController := &controllers.ChatController{
 		ChatCollection: chatCollection,
+		UserCollection: userCollection,
 	}
 	messageController := &controllers.MessageController{}
 

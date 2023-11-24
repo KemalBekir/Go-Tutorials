@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/middleware"
@@ -11,6 +12,7 @@ import (
 
 type ChatController struct {
 	ChatCollection *services.ChatCollection
+	UserCollection *services.UserCollection
 }
 
 func (c *ChatController) ChatRoutes(router *mux.Router) {
@@ -51,7 +53,28 @@ func (c *ChatController) HandleChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"status": "Chat GetChats route"})
+
+		userID, err := middleware.ExtractUserIDFromToken(token)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"message": "Unauthorized access"})
+			return
+		}
+
+		chats, err := services.GetChats(userID, c.ChatCollection.Collection, c.UserCollection.Collection) // Retrieve chats for the user
+		if err != nil {
+			// Log the error for internal debugging
+			fmt.Println("Error retrieving chats:", err)
+
+			// Respond with a 400 Bad Request and an error message
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"message": "Error retrieving chats"})
+			return
+		}
+
+		// Respond with the retrieved chats
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(chats)
+
 	}
 }
