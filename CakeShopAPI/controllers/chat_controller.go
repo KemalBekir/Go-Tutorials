@@ -53,7 +53,6 @@ func (c *ChatController) HandleChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-
 		userID, err := middleware.ExtractUserIDFromToken(token)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)

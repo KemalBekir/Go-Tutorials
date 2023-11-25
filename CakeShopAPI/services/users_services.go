@@ -113,7 +113,7 @@ func CreateSession(user *User) map[string]interface{} {
 	}
 }
 
-func VerifySession(token string) (map[string]interface{}, error) {
+func VerifySession(token string, userCollection *mongo.Collection) (map[string]interface{}, error) {
 	if containsToken(token) {
 		return nil, errors.New("token is invalidated")
 	}
