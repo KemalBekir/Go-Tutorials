@@ -61,7 +61,6 @@ func main() {
 	}
 	catalogController := &controllers.CatalogController{
 		CakeCollection: cakeCollection,
-		Client:         client,
 	}
 	chatController := &controllers.ChatController{
 		ChatCollection: chatCollection,

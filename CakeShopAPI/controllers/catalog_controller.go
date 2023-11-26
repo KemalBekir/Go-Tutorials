@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/middleware"
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/models"
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/services"
 	"github.com/gorilla/mux"
@@ -16,7 +17,7 @@ import (
 
 type CatalogController struct {
 	CakeCollection *services.CakeCollection
-	Client         *mongo.Client
+	UserCollection *services.UserCollection
 }
 
 type Owner struct {
@@ -29,11 +30,14 @@ func (c *CatalogController) CatalogRoutes(router *mux.Router) {
 	router.HandleFunc("/catalog/deals", c.GetOnOffer).Methods("GET")
 	router.HandleFunc("/catalog/search", c.Search).Methods("GET")
 	//TODO Modify myCakes
-	router.HandleFunc("/catalog/myCakes/{ownerID}", c.GetAllByOwner).Methods("GET")
-	router.HandleFunc("/catalog/create", c.Create).Methods("POST")
-	router.HandleFunc("/catalog/{id}", c.GetDetails).Methods("GET")
-	router.HandleFunc("/catalog/{id}/update", c.Update).Methods("PUT")
-	router.HandleFunc("/catalog/{id}/delete", c.Delete).Methods("DELETE")
+	authMiddleware := middleware.AuthMiddleware(c.UserCollection)
+	authRouter := router.PathPrefix("/catalog").Subrouter()
+	authRouter.Use(authMiddleware)
+	authRouter.HandleFunc("/myCakes/{ownerID}", c.GetAllByOwner).Methods("GET")
+	authRouter.HandleFunc("/create", c.Create).Methods("POST")
+	authRouter.HandleFunc("/{id}", c.GetDetails).Methods("GET")
+	authRouter.HandleFunc("/{id}/update", c.Update).Methods("PUT")
+	authRouter.HandleFunc("/{id}/delete", c.Delete).Methods("DELETE")
 }
 
 func (c *CatalogController) GetAll(w http.ResponseWriter, r *http.Request) {
