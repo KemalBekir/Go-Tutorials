@@ -29,15 +29,18 @@ func (c *CatalogController) CatalogRoutes(router *mux.Router) {
 	router.HandleFunc("/catalog/top5", c.GetTopFive).Methods("GET")
 	router.HandleFunc("/catalog/deals", c.GetOnOffer).Methods("GET")
 	router.HandleFunc("/catalog/search", c.Search).Methods("GET")
-	//TODO Modify myCakes
-	authMiddleware := middleware.AuthMiddleware(c.UserCollection)
+
+	authMiddleware := middleware.IsAuth
+	adminMiddleware := middleware.IsAdmin
+	ownerMiddleware := middleware.IsOwner
+
 	authRouter := router.PathPrefix("/catalog").Subrouter()
-	authRouter.Use(authMiddleware)
-	authRouter.HandleFunc("/myCakes/{ownerID}", c.GetAllByOwner).Methods("GET")
-	authRouter.HandleFunc("/create", c.Create).Methods("POST")
-	authRouter.HandleFunc("/{id}", c.GetDetails).Methods("GET")
-	authRouter.HandleFunc("/{id}/update", c.Update).Methods("PUT")
-	authRouter.HandleFunc("/{id}/delete", c.Delete).Methods("DELETE")
+
+	authRouter.HandleFunc("/myCakes/{ownerID}", authMiddleware(c.GetAllByOwner)).Methods("GET")
+	authRouter.HandleFunc("/create", authMiddleware(adminMiddleware(c.Create))).Methods("POST")
+	authRouter.HandleFunc("/{id}", authMiddleware(c.GetDetails)).Methods("GET")
+	authRouter.HandleFunc("/{id}/update", authMiddleware(ownerMiddleware(c.Update))).Methods("PUT")
+	authRouter.HandleFunc("/{id}/delete", authMiddleware(ownerMiddleware(c.Delete))).Methods("DELETE")
 }
 
 func (c *CatalogController) GetAll(w http.ResponseWriter, r *http.Request) {

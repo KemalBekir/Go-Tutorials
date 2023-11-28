@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/controllers"
+	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/middleware"
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/services"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
@@ -55,6 +56,7 @@ func main() {
 	fmt.Println("Pinged your deployment. You successfully connected to MongoDB!")
 
 	r := mux.NewRouter()
+	r.Use(middleware.CorsMiddleware)
 
 	userController := &controllers.UserController{
 		UserCollection: userCollection,
