@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/middleware"
 	"github.com/KemalBekir/Go-Tutorials/CakeShopAPI/models"
@@ -67,9 +68,28 @@ func (c *CatalogController) GetOnOffer(w http.ResponseWriter, r *http.Request) {
 	services.GetCakesOnOffer(context.TODO(), w, r, cakeCollection)
 	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog OnOffer route"})
 }
+
 func (c *CatalogController) Search(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "Catalog Search route"})
+
+	text := r.URL.Query().Get("text") // Extract the search text from query params
+	if text == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Missing search text"})
+		return
+	}
+
+	cakeCollection := c.CakeCollection.Collection
+
+	cakes, err := services.SearchCakesByText(r.Context(), strings.TrimSpace(text), cakeCollection)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Error searching cakes"})
+		return
+	}
+
+	// Return the search results as JSON
+	json.NewEncoder(w).Encode(cakes)
 }
 
 // TODO - fix Get all by owner
