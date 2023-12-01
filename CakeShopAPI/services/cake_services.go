@@ -241,9 +241,9 @@ func DeleteCake(ctx context.Context, cakeCollection *CakeCollection, cakeID stri
 	return nil
 }
 
-func SearchCakesByText(ctx context.Context, text string, cakeCollection *mongo.Collection) ([]CakeCollection, error) {
+func SearchCakesByText(ctx context.Context, text string, cakeCollection *mongo.Collection) ([]models.Cake, error) {
 	// Create a regular expression pattern for case-insensitive search
-	pattern := bson.M{"$regex": text, "$options": "i"}
+	pattern := primitive.Regex{Pattern: text, Options: "i"}
 
 	// Define the search criteria with OR condition for cakeName and type
 	filter := bson.M{"$or": []bson.M{
@@ -251,17 +251,14 @@ func SearchCakesByText(ctx context.Context, text string, cakeCollection *mongo.C
 		{"type": pattern},
 	}}
 
-	// Create options for sorting or other settings if needed
-	findOptions := options.Find().SetSort(bson.D{{"cakeName", 1}}) // Example: sorting by cakeName
-
 	// Find documents in the collection that match the search criteria
-	cursor, err := cakeCollection.Find(ctx, filter, findOptions)
+	cursor, err := cakeCollection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var cakes []CakeCollection
+	var cakes []models.Cake
 	if err := cursor.All(ctx, &cakes); err != nil {
 		return nil, err
 	}
