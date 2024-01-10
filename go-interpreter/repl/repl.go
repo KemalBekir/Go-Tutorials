@@ -3,29 +3,31 @@ package repl
 import (
 	"Go-Tutorials/go-interpreter/evaluator"
 	"Go-Tutorials/go-interpreter/lexer"
+	"Go-Tutorials/go-interpreter/object"
 	"Go-Tutorials/go-interpreter/parser"
 	"bufio"
 	"fmt"
 	"io"
 )
 
-const MONKEY_FACE = ` __,__
-	.--. .-"      "-. .--.
-   / .. \/ .-. .-.  \/ .. \
-  | | ' | / Y \ |' | |
-  | \   \ \ 0 | 0 / / / |
-   \ '- ,\.-"""""""-./, -' /
-     ''-' /_ ^ ^ _\ '-''
-          | \._ _./ |
-          \ \ '~' / /
-          '._ '-=-' _.'
-            '-----'
+const MONKEY_FACE = `            __,__
+   .--.  .-"     "-.  .--.
+  / .. \/  .-. .-.  \/ .. \
+ | |  '|  /   Y   \  |'  | |
+ | \   \  \ 0 | 0 /  /   / |
+  \ '- ,\.-"""""""-./, -' /
+   ''-' /_   ^ ^   _\ '-''
+       |  \._   _./  |
+       \   \ '~' /   /
+        '._ '-=-' _.'
+           '-----'
 `
 
 const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	env := object.NewEnvironment()
 	for {
 		fmt.Fprintf(out, PROMPT)
 		scanned := scanner.Scan()
@@ -43,7 +45,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program, env)
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())
 			io.WriteString(out, "\n")
