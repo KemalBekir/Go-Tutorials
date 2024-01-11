@@ -69,8 +69,8 @@ type Identifier struct {
 }
 
 func (i *Identifier) expressionNode()      {}
-func (i *Identifier) String() string       { return i.Value }
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
+func (i *Identifier) String() string       { return i.Value }
 
 type ReturnStatement struct {
 	Token       token.Token // the 'return' token
@@ -210,15 +210,15 @@ func (bs *BlockStatement) String() string {
 	return out.String()
 }
 
-type FunctionlLiteral struct {
+type FunctionLiteral struct {
 	Token      token.Token // The 'fn' token
 	Parameters []*Identifier
 	Body       *BlockStatement
 }
 
-func (fl *FunctionlLiteral) expressionNode()      {}
-func (fl *FunctionlLiteral) TokenLiteral() string { return fl.Token.Literal }
-func (fl *FunctionlLiteral) String() string {
+func (fl *FunctionLiteral) expressionNode()      {}
+func (fl *FunctionLiteral) TokenLiteral() string { return fl.Token.Literal }
+func (fl *FunctionLiteral) String() string {
 	var out bytes.Buffer
 
 	params := []string{}
