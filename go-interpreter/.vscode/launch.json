@@ -36,5 +36,12 @@
       "mode": "auto",
       "program": "${workspaceFolder}/code/code_test.go"
     },
+    {
+      "name": "Debug Parser",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/compiler/compiler_test.go"
+    }
   ]
 }
