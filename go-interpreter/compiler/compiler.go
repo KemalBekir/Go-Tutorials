@@ -4,6 +4,7 @@ import (
 	"Go-Tutorials/go-interpreter/ast"
 	"Go-Tutorials/go-interpreter/code"
 	"Go-Tutorials/go-interpreter/object"
+	"fmt"
 )
 
 type Compiler struct {
@@ -45,9 +46,17 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
+		switch node.Operator {
+		case "+":
+			c.emit(code.OpAdd)
+		default:
+			return fmt.Errorf("unkown operator %s", node.Operator)
+		}
+
 	case *ast.IntegerLiteral:
 		integer := &object.Integer{Value: node.Value}
 		c.emit(code.OpConstant, c.addConstant(integer))
+
 	}
 
 	return nil
