@@ -7,8 +7,6 @@ import (
 	"fmt"
 )
 
-//TODO 113
-
 const StackSize = 2048
 
 var True = &object.Boolean{Value: true}
