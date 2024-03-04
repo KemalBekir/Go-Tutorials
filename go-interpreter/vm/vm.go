@@ -7,7 +7,6 @@ import (
 	"fmt"
 )
 
-// TODO 126
 const StackSize = 2048
 
 var True = &object.Boolean{Value: true}
@@ -34,6 +33,12 @@ func New(bytecode *compiler.Bytecode) *VM {
 		sp:      0,
 		globals: make([]object.Object, GlobalsSize),
 	}
+}
+
+func NewWithGlobalsStore(bytecode *compiler.Bytecode, s []object.Object) *VM {
+	vm := New(bytecode)
+	vm.globals = s
+	return vm
 }
 
 // func (vm *VM) StackTop() object.Object {
