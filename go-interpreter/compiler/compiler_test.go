@@ -10,6 +10,7 @@ import (
 	"testing"
 )
 
+// TODO 128
 type compilerTestCase struct {
 	input                string
 	expectedConstants    []interface{}
