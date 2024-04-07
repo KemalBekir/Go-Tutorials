@@ -21,5 +21,3 @@ func workbook(n int32, k int32, arr []int32) int32 {
 
 	return amountOfSpecialProblems
 }
-
-//Solved
