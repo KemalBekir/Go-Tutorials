@@ -4,3 +4,5 @@ go-mongodb/app.env
 Core-lang
 gno
 pricetracker-rest-api-go
+automart
+pricetracker-rest-api-go
