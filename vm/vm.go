@@ -152,15 +152,13 @@ func (vm *VM) Run() error {
 			}
 
 		case code.OpHash:
-			numElements := int(code.ReadUint16(vm.instructions[ip+1 : 1]))
+			numElements := int(code.ReadUint16(vm.instructions[ip+1:]))
 			ip += 2
-
 			hash, err := vm.buildHash(vm.sp-numElements, vm.sp)
 			if err != nil {
 				return err
 			}
 			vm.sp = vm.sp - numElements
-
 			err = vm.push(hash)
 			if err != nil {
 				return err
